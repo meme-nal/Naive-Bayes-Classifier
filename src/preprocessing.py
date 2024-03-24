@@ -1,7 +1,4 @@
-import numpy as np
 import pandas as pd
-import seaborn as sb
-import matplotlib.pyplot as plt
 
 data = pd.read_csv("./data/raw/Iris.csv")
 data = data.drop(columns='Id')
