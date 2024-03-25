@@ -1,17 +1,20 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.style.use('dark_background')
 import seaborn as sns
 
 from src.models import NaiveBayesClassifier
+from src import evaluations
+from src import results
 
 
 dataset = pd.read_csv("./data/preprocessed/Iris_preprocessed.csv")
-dataset = dataset.sample(frac=1) # shuffling
+dataset = dataset.sample(frac=1, random_state=19) # shuffling
 
 ### Simple EDA
 
 # check if there are missings in data
-print(dataset.isna().mean().sort_values(ascending=False))
+#print(dataset.isna().mean().sort_values(ascending=False))
 
 # check if predictable classes are unbalanced
 fig = plt.figure(figsize=(8,8))
@@ -43,25 +46,36 @@ dataset['cat_PetalWidthCm'] = pd.cut(dataset['PetalWidthCm'].values, bins=4, lab
 dataset = dataset.drop(columns=['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm'])
 dataset = dataset[['cat_SepalLengthCm', 'cat_SepalWidthCm', 'cat_PetalLengthCm', 'cat_PetalWidthCm', 'Species']]
 
+
 # splitting into train and test data
 train_size = 0.8
 
-#train = dataset.iloc[:int(train_size*dataset.shape[0]),:]
-#test = dataset.iloc[int(train_size*dataset.shape[0]):,:]
+train = dataset.iloc[:int(train_size*dataset.shape[0]),:]
+test = dataset.iloc[int(train_size*dataset.shape[0]):,:]
+X_test = test.iloc[:,:-1]
+y_test = test.iloc[:,-1].to_numpy()
 
 
+# model
+model = NaiveBayesClassifier()
+predictions = model.predict(train, X_test, label='Species')
 
 
-# end splitting
+model_results = {}
 
-#model = NaiveBayesClassifier()
-#model.train(train, 'Species')
-#model.predict()
+# Evaluations 
+labels = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+confusion_matrix = evaluations.get_confusion_matrix(predictions, y_test)
+
+precisions = evaluations.get_precision(confusion_matrix, labels)
+model_results['precisions'] = precisions
+
+recalls = evaluations.get_recall(confusion_matrix, labels)
+model_results['recalls'] = recalls
+
+f1_scores = evaluations.get_f1_score(precisions, recalls, labels)
+print(f"f1-scores: {f1_scores}")
 
 
-
-
-
-
-
+#results.generate_results(model_results)
 
